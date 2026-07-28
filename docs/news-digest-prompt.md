@@ -69,24 +69,49 @@ Two ways `data/digests.csv` gets updated:
    — same rhythm as the `portfolio.json` workflow in
    [docs/reingest.md](reingest.md).
 2. **Automatic, via the routine itself**: `app/api/news-digest/route.ts` is
-   a POST endpoint that takes `{ date, subject, emailId, text }`, checks an
-   `x-digest-secret` header against `DIGEST_INGEST_SECRET`, and commits an
-   updated `data/digests.csv` straight to GitHub via the Contents API (using
-   a `GITHUB_TOKEN` fine-grained PAT scoped to just this repo, "Contents:
-   Read and write"). It's excluded from the cookie auth-gate in `proxy.ts`
-   (alongside `/login` and `/api/login`) since the routine calls it
-   directly, not as a logged-in browser session. Since Vercel auto-deploys
-   on push, this commit triggers a fresh build that picks up the new row —
-   no manual step needed, at the cost of a ~1-2 minute rebuild per digest.
-   The routine needs `Bash` in `allowed_tools` to `curl` this endpoint, and
+   a POST endpoint that takes `{ sentAt, subject, emailId, text }` (`sentAt`
+   is a full ISO 8601 timestamp, not just a date — the dashboard shows
+   time-of-day and needs it), checks an `x-digest-secret` header against
+   `DIGEST_INGEST_SECRET`, and commits an updated `data/digests.csv`
+   straight to GitHub via the Contents API (using a `GITHUB_TOKEN`
+   fine-grained PAT scoped to just this repo, "Contents: Read and write").
+   It's excluded from the cookie auth-gate in `proxy.ts` (alongside
+   `/login` and `/api/login`) since the routine calls it directly, not as a
+   logged-in browser session. Since Vercel auto-deploys on push, this
+   commit triggers a fresh build that picks up the new row — no manual step
+   needed, at the cost of a ~1-2 minute rebuild per digest. The routine
+   needs `Bash` in `allowed_tools` to `curl` this endpoint, and
    `DIGEST_INGEST_SECRET` ends up embedded in plaintext in the routine's
    prompt (`job_config` is returned as plaintext by the routines API) — a
    real exposure consideration if the routine config is ever shared, though
    scoped narrowly to "can add one digest row" rather than a
    production-wide credential.
 
+   **Incident (2026-07-28)**: the first live run after wiring this up sent
+   its email successfully but the ingest step failed silently — the
+   routine's prompt originally had it hand-write the JSON payload inline in
+   a `curl -d '...'` string, and real news text full of quotes/apostrophes
+   is genuinely error-prone to escape correctly by hand, with no visible
+   error beyond an HTTP response nobody was watching live. Fixed by having
+   the routine write the subject/text to plain files verbatim (heredoc,
+   zero escaping needed) and build the JSON with a small Python script
+   (`json.dump`) instead of by hand — see the routine's current prompt for
+   the exact pattern. That digest was recovered manually (fetched from
+   Resend's API, backfilled into `data/digests.csv` directly).
+
 Required Vercel env vars for path 2: `DIGEST_INGEST_SECRET` and
 `GITHUB_TOKEN` (neither is needed for path 1 alone).
+
+## Website UI
+
+`components/NewsDigest.tsx` is a client component (needs interactivity, so
+it can't be a server component like the rest of the dashboard): a date
+filter (`<select>` of days that actually have a digest), "Show more"
+pagination (5 at a time, not a hard cutoff), and each entry displays
+formatted date + time in IST via `lib/format.ts`'s `formatDateTime`. Since
+multiple digests can land on the same calendar day (manual runs, retries),
+rows are de-duplicated only by `email_id`, never collapsed by date — the
+date filter narrows to a day but still shows every entry within it.
 
 ## Open question: how does the routine get the holdings list?
 
