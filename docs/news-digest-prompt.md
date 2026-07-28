@@ -58,22 +58,35 @@ source of truth is `data/digests.csv`, committed to the repo like other
 non-sensitive data files (it's news headlines/links, not financial figures,
 so unlike `data/portfolio.json` it isn't gitignored).
 
-`data/digests.csv` is populated by `npm run sync-digest`
-(`scripts/sync-digest.ts`), which fetches recently-sent emails from the
-**Resend REST API** (not the MCP connector — this runs as a plain local
-script) and appends any new `Portfolio Digest —` emails as rows. Requires a
-**full-access** `RESEND_API_KEY` in `.env.local` — the original key was
-scoped to "sending access" only, which can send but can't call `GET
-/emails` to list past sends, so a new full-access key had to be generated.
+Two ways `data/digests.csv` gets updated:
 
-This is a manual step (run `sync-digest` → commit → push → redeploy),
-mirroring the existing `portfolio.json` refresh workflow in
-[docs/reingest.md](reingest.md) rather than a fully automatic pipeline.
-Automating it further (e.g. the routine calling a webhook that commits to
-GitHub directly) was considered and deferred — see the tradeoffs discussion
-in this project's history if picking it back up: it would need `Bash`
-re-added to the routine's `allowed_tools` plus a GitHub token as a new
-secret embedded in the routine's prompt.
+1. **Manual**: `npm run sync-digest` (`scripts/sync-digest.ts`) fetches
+   recently-sent emails from the **Resend REST API** (not the MCP connector
+   — this runs as a plain local script) and appends any new
+   `Portfolio Digest —` emails as rows. Requires a **full-access**
+   `RESEND_API_KEY` in `.env.local` — a sending-only key can send but can't
+   call `GET /emails` to list past sends. Run it, then commit/push/redeploy
+   — same rhythm as the `portfolio.json` workflow in
+   [docs/reingest.md](reingest.md).
+2. **Automatic, via the routine itself**: `app/api/news-digest/route.ts` is
+   a POST endpoint that takes `{ date, subject, emailId, text }`, checks an
+   `x-digest-secret` header against `DIGEST_INGEST_SECRET`, and commits an
+   updated `data/digests.csv` straight to GitHub via the Contents API (using
+   a `GITHUB_TOKEN` fine-grained PAT scoped to just this repo, "Contents:
+   Read and write"). It's excluded from the cookie auth-gate in `proxy.ts`
+   (alongside `/login` and `/api/login`) since the routine calls it
+   directly, not as a logged-in browser session. Since Vercel auto-deploys
+   on push, this commit triggers a fresh build that picks up the new row —
+   no manual step needed, at the cost of a ~1-2 minute rebuild per digest.
+   The routine needs `Bash` in `allowed_tools` to `curl` this endpoint, and
+   `DIGEST_INGEST_SECRET` ends up embedded in plaintext in the routine's
+   prompt (`job_config` is returned as plaintext by the routines API) — a
+   real exposure consideration if the routine config is ever shared, though
+   scoped narrowly to "can add one digest row" rather than a
+   production-wide credential.
+
+Required Vercel env vars for path 2: `DIGEST_INGEST_SECRET` and
+`GITHUB_TOKEN` (neither is needed for path 1 alone).
 
 ## Open question: how does the routine get the holdings list?
 

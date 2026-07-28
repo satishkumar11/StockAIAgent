@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse } from "csv-parse/sync";
+import { DIGEST_CSV_HEADER, buildDigestCsvRow } from "../lib/digestCsv";
 
 const CSV_PATH = path.join(process.cwd(), "data", "digests.csv");
-const CSV_HEADER = "date,subject,email_id,text";
 
 interface ResendEmailSummary {
   id: string;
@@ -25,13 +25,6 @@ function loadEnvLocal() {
       process.env[match[1]] = match[2];
     }
   }
-}
-
-function csvEscape(field: string): string {
-  if (/[",\n]/.test(field)) {
-    return `"${field.replace(/"/g, '""')}"`;
-  }
-  return field;
 }
 
 function loadExistingIds(): Set<string> {
@@ -82,14 +75,12 @@ async function main() {
     const detail = (await resendFetch(apiKey, `/emails/${email.id}`)) as ResendEmailDetail;
     const date = email.created_at.slice(0, 10);
     const text = (detail.text ?? "").trim();
-    rows.push(
-      [csvEscape(date), csvEscape(email.subject), csvEscape(email.id), csvEscape(text)].join(",")
-    );
+    rows.push(buildDigestCsvRow({ date, subject: email.subject, emailId: email.id, text }));
     console.log(`Synced: ${email.subject}`);
   }
 
   const needsHeader = !fs.existsSync(CSV_PATH) || !fs.readFileSync(CSV_PATH, "utf-8").trim();
-  const prefix = needsHeader ? `${CSV_HEADER}\n` : "";
+  const prefix = needsHeader ? `${DIGEST_CSV_HEADER}\n` : "";
   fs.appendFileSync(CSV_PATH, prefix + rows.join("\n") + "\n");
 
   console.log(`Wrote ${rows.length} new digest row(s) to ${CSV_PATH}`);
