@@ -15,7 +15,7 @@ Resolved during setup:
   path (see Resend below).
 - **Actual delivery — Resend**: since Gmail MCP can't send, the routine's
   primary delivery path is the **Resend MCP connector's `send-email` tool**,
-  sending from `hello@imsatty.com` to `kr.satish123@gmail.com`.
+  sending from `hello@imsatty.com` to `<recipient-email>`.
   `imsatty.com` was registered (via Cloudflare Registrar) and DNS-verified
   in Resend specifically for this project — no API key is embedded in the
   routine's prompt and no unrelated project's credentials are reused. The
@@ -47,7 +47,7 @@ Resolved during setup:
    - Body grouped by segment header, 1-3 bullets per item: headline, one-line
      takeaway, source link.
 5. **Send** via the Resend MCP connector's `send-email` tool (from
-   `hello@imsatty.com` to `kr.satish123@gmail.com`).
+   `hello@imsatty.com` to `<recipient-email>`).
 6. **Ingest** into the website — a single `curl` with just the email ID (see
    "Displaying digests on the website" below for why it's this minimal).
 7. **Also** create a Gmail draft with the same content as a backup/record.

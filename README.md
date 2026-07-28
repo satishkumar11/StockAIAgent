@@ -46,7 +46,7 @@ Live as a cloud routine (`portfolio-news-digest`), weekdays 10:00 AM IST —
 generates a materiality-filtered news digest over current holdings and
 **sends it via the Resend MCP connector** (from `hello@imsatty.com`, a
 domain registered and DNS-verified specifically for this project) to
-`kr.satish123@gmail.com`, with a Gmail **draft** created as a backup/record
+`<recipient-email>`, with a Gmail **draft** created as a backup/record
 (Gmail MCP itself has no send tool). Details and links are in
 [docs/news-digest-prompt.md](docs/news-digest-prompt.md).
 
