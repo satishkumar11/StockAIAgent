@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS, createSessionToken } from "@/lib/auth";
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+  createSessionToken,
+  timingSafeEqual,
+} from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   const secret = process.env.SITE_PASSWORD;
@@ -10,7 +15,7 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const password = formData.get("password");
 
-  if (typeof password !== "string" || password !== secret) {
+  if (typeof password !== "string" || !(await timingSafeEqual(password, secret))) {
     const loginUrl = new URL("/login?error=1", request.url);
     return NextResponse.redirect(loginUrl, { status: 303 });
   }

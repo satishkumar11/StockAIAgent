@@ -106,6 +106,7 @@ function FilterChip({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`rounded-full border px-3 py-1 text-sm transition-colors ${
         active

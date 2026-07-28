@@ -57,7 +57,7 @@ async function main() {
   }
 
   const existingIds = loadExistingIds();
-  const list = (await resendFetch(apiKey, "/emails?limit=20")) as {
+  const list = (await resendFetch(apiKey, "/emails?limit=100")) as {
     data: ResendEmailSummary[];
   };
 

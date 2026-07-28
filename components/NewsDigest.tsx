@@ -64,7 +64,10 @@ export function NewsDigest({ digests }: { digests: Digest[] }) {
           {selectedDate && (
             <button
               type="button"
-              onClick={() => setSelectedDate("")}
+              onClick={() => {
+                setSelectedDate("");
+                setVisibleCount(PAGE_SIZE);
+              }}
               className="text-xs text-[var(--accent)] underline"
             >
               Clear
