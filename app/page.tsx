@@ -1,9 +1,12 @@
 import { getPortfolio } from "@/lib/portfolio";
+import { getDigests } from "@/lib/digests";
 import { SummaryCards } from "@/components/SummaryCards";
 import { HoldingsExplorer } from "@/components/HoldingsExplorer";
+import { NewsDigest } from "@/components/NewsDigest";
 
 export default function DashboardPage() {
   const portfolio = getPortfolio();
+  const digests = getDigests();
 
   if (!portfolio) {
     return (
@@ -29,6 +32,8 @@ export default function DashboardPage() {
           </button>
         </form>
       </header>
+
+      <NewsDigest digests={digests} />
 
       <SummaryCards
         invested={portfolio.totals.invested}

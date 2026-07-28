@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "ingest": "tsx scripts/ingest.ts",
-    "print-env": "tsx scripts/print-portfolio-env.ts"
+    "print-env": "tsx scripts/print-portfolio-env.ts",
+    "sync-digest": "tsx scripts/sync-digest.ts"
   },
   "dependencies": {
     "csv-parse": "^7.0.1",

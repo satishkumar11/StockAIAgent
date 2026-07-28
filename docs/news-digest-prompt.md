@@ -1,12 +1,32 @@
 # Daily news digest — routine spec
 
-Not wired up yet. This is the spec to hand to the `schedule` skill once
-**both** of these are true:
+**Live as of 2026-07-27** as routine `portfolio-news-digest`
+(`trig_018iiuaS4z5FxH4aPUrGxRCL`), weekdays 04:30 UTC / 10:00 AM IST.
 
-1. The Gmail MCP connector is authorized (via claude.ai connector settings —
-   this can't be done from a non-interactive session).
-2. We've decided how the routine gets the current holdings list (see "Open
-   question" below).
+Links:
+
+- Routine: <https://claude.ai/code/routines/trig_018iiuaS4z5FxH4aPUrGxRCL>
+- Artifact: <https://claude.ai/code/artifact/0a075055-e8d7-4018-a9ad-a422ae829a1a>
+
+Resolved during setup:
+
+- **Gmail**: connector only exposes `create_draft`/`update_draft`, no send
+  tool. Kept as a **backup/record** draft only — not the primary delivery
+  path (see Resend below).
+- **Actual delivery — Resend**: since Gmail MCP can't send, the routine's
+  primary delivery path is the **Resend MCP connector's `send-email` tool**,
+  sending from `hello@imsatty.com` to `kr.satish123@gmail.com`.
+  `imsatty.com` was registered (via Cloudflare Registrar) and DNS-verified
+  in Resend specifically for this project — no API key is embedded in the
+  routine's prompt and no unrelated project's credentials are reused. The
+  routine's `mcp_connections` includes the Resend connector; `allowed_tools`
+  no longer needs `Bash` since there's no `curl` call to make.
+- **Holdings list**: the cloud environment does not have access to this
+  private repo (403 on `git_repository` source), so the segment list is
+  embedded as static text directly in the routine's prompt, not read from
+  `data/sectors.json`. Update the routine's prompt by hand (via the
+  `schedule` skill or the routines UI) after any re-ingest that changes the
+  holdings materially.
 
 ## What the routine should do, every weekday morning (~7:30 AM IST)
 
@@ -26,8 +46,34 @@ Not wired up yet. This is the spec to hand to the `schedule` skill once
    - Subject: `Portfolio Digest — <date> (<N updates>)`
    - Body grouped by segment header, 1-3 bullets per item: headline, one-line
      takeaway, source link.
-5. **Send** via the Gmail MCP connector's send-email tool to
-   kr.satish123@gmail.com.
+5. **Send** via the Resend MCP connector's `send-email` tool (from
+   `hello@imsatty.com` to `kr.satish123@gmail.com`), then **also** create a
+   Gmail draft with the same content as a backup/record.
+
+## Displaying digests on the website
+
+Beyond email, the dashboard also shows past digests (see
+`components/NewsDigest.tsx`, `lib/digests.ts`). There's no database — the
+source of truth is `data/digests.csv`, committed to the repo like other
+non-sensitive data files (it's news headlines/links, not financial figures,
+so unlike `data/portfolio.json` it isn't gitignored).
+
+`data/digests.csv` is populated by `npm run sync-digest`
+(`scripts/sync-digest.ts`), which fetches recently-sent emails from the
+**Resend REST API** (not the MCP connector — this runs as a plain local
+script) and appends any new `Portfolio Digest —` emails as rows. Requires a
+**full-access** `RESEND_API_KEY` in `.env.local` — the original key was
+scoped to "sending access" only, which can send but can't call `GET
+/emails` to list past sends, so a new full-access key had to be generated.
+
+This is a manual step (run `sync-digest` → commit → push → redeploy),
+mirroring the existing `portfolio.json` refresh workflow in
+[docs/reingest.md](reingest.md) rather than a fully automatic pipeline.
+Automating it further (e.g. the routine calling a webhook that commits to
+GitHub directly) was considered and deferred — see the tradeoffs discussion
+in this project's history if picking it back up: it would need `Bash`
+re-added to the routine's `allowed_tools` plus a GitHub token as a new
+secret embedded in the routine's prompt.
 
 ## Open question: how does the routine get the holdings list?
 

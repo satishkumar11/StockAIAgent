@@ -1,8 +1,8 @@
 # Portfolio Tracker
 
-Personal stock-portfolio dashboard: merges holdings exported from two
-brokers into one view, grouped by segment, behind a password gate.
-Next.js (App Router) + TypeScript, deployed to Vercel.
+Personal stock-portfolio dashboard: merges holdings exported from brokers
+into one view, grouped by segment, behind a password gate. Next.js (App
+Router) + TypeScript, deployed to Vercel.
 
 ## Local setup
 
@@ -11,10 +11,15 @@ npm install
 cp .env.local.example .env.local   # set SITE_PASSWORD
 ```
 
-Place your two broker CSV exports at:
+Place your broker CSV exports at:
 
-- `data/raw/zerodha-holdings.csv`
-- `data/raw/invest-right.csv`
+- `data/raw/zerodha-holdings.csv` — Zerodha
+- `data/raw/invest-right.csv` — HDFC Securities ("Invest Right")
+
+`npm run ingest` only reads these two files. A third file,
+`data/raw/groww-holdings.csv`, also lives in `data/raw/` but is **not**
+currently read by the ingest script — the Groww account is not merged into
+the dashboard yet.
 
 Then:
 
@@ -37,8 +42,20 @@ file directly (symbol → company name + sector), no code changes needed.
 
 ## Daily news digest
 
-Not wired up yet — spec is in [docs/news-digest-prompt.md](docs/news-digest-prompt.md).
-Blocked on Gmail MCP connector authorization.
+Live as a cloud routine (`portfolio-news-digest`), weekdays 10:00 AM IST —
+generates a materiality-filtered news digest over current holdings and
+**sends it via the Resend MCP connector** (from `hello@imsatty.com`, a
+domain registered and DNS-verified specifically for this project) to
+`kr.satish123@gmail.com`, with a Gmail **draft** created as a backup/record
+(Gmail MCP itself has no send tool). Details and links are in
+[docs/news-digest-prompt.md](docs/news-digest-prompt.md).
+
+The dashboard also **displays past digests** in-app. Run `npm run
+sync-digest` (needs a **full-access** `RESEND_API_KEY` in `.env.local` —
+sending-only keys can't list past emails) to pull newly-sent digests from
+Resend into `data/digests.csv`, which the dashboard reads directly. This is
+a manual step, same rhythm as re-ingesting portfolio data — run it, then
+commit/push/redeploy to update the live site.
 
 ## Deploying
 
