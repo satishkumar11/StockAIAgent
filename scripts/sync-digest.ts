@@ -73,9 +73,10 @@ async function main() {
   const rows: string[] = [];
   for (const email of newDigests) {
     const detail = (await resendFetch(apiKey, `/emails/${email.id}`)) as ResendEmailDetail;
-    const date = email.created_at.slice(0, 10);
     const text = (detail.text ?? "").trim();
-    rows.push(buildDigestCsvRow({ date, subject: email.subject, emailId: email.id, text }));
+    rows.push(
+      buildDigestCsvRow({ sentAt: email.created_at, subject: email.subject, emailId: email.id, text })
+    );
     console.log(`Synced: ${email.subject}`);
   }
 

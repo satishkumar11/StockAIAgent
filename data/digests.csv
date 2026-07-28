@@ -1,5 +1,5 @@
-date,subject,email_id,text
-2026-07-28,Portfolio Digest — 2026-07-28 (14 updates),ede4ce2e-c1f7-4b06-8b57-ef1d7e2d4f28,"PORTFOLIO DIGEST — 2026-07-28 (14 updates)
+sent_at,subject,email_id,text
+2026-07-28T09:16:05.641Z,Portfolio Digest — 2026-07-28 (14 updates),ede4ce2e-c1f7-4b06-8b57-ef1d7e2d4f28,"PORTFOLIO DIGEST — 2026-07-28 (14 updates)
 
 POWER & UTILITIES
 - Bernstein initiated/reiterated 'Outperform' on Tata Power, JSW Energy and NTPC, with target prices implying 23-34% upside (Tata Power Rs 430, JSW Energy Rs 623, NTPC Rs 450). Published July 22, 2026.
@@ -62,3 +62,59 @@ IT SERVICES
 
 ---
 No material news surfaced today for: Defense (MAZDOCK, BEL, ZENTEC, GRSE, BDL, SOLARINDS, AVANTEL, DATAPATTNS), Capital Markets & Exchanges (CDSL, MCX, BSE), the uncategorized names (CPPLUS, INOXINDIA, GARFIBRES, KRN-BE, PTCIL, ROTO, ATLANTAELE, VOGL, VISL), NATIONALUM/VAML/VEDL/JINDALSAW/VEDPOWER, MAFANG, POLYCAB/KEI, MOTILALOFS, TATACOMM, and NETWORK18."
+2026-07-28T13:17:49.925Z,Portfolio Digest — 2026-07-28 (13 updates),302ad8da-3490-4ffd-991a-e6f0be4fa02b,"Portfolio Digest — 2026-07-28 (13 updates)
+
+DEFENSE
+- DAC clears Rs 52,000 crore in defence acquisitions; BEL, BDL, Mazagon Dock, GRSE among gainers. Big order-book tailwind for the whole defense basket after the Defence Acquisition Council's approvals.
+  Source: https://www.businesstoday.in/markets/stocks/story/bel-hal-bdl-mazagon-dock-target-prices-defence-stocks-to-buy-after-rs-52000-cr-dac-approvals-541060-2026-07-06
+- Nifty India Defence index fell ~2% intraday (Jul 7) as BEL, Solar Industries, Data Patterns slipped on profit-booking despite a positive broader market. Short-term pullback after the DAC-approval rally, not a change in fundamentals.
+  Source: https://upstox.com/news/market-news/stocks/bel-solar-industries-data-patterns-defence-stocks-slip-amid-positive-broader-market-move-nifty-india-defence-down-2/article-196511/
+
+CAPITAL MARKETS & EXCHANGES
+- MCX and BSE shares fell up to 5.5%, extending losses to a 4th session, after RBI's revised capital exposure norms (effective July 1) curbed bank financing for broker proprietary trading, and a Jefferies note ahead of NSE's IPO flagged NSE's superior profitability. Direct hit to trading-volume-linked revenue at both exchanges.
+  Source: https://www.business-standard.com/markets/news/mcx-bse-shares-fall-up-to-5-5-extend-losses-to-4th-day-here-s-why-126070700549_1.html
+
+METALS & MINING
+- Vedanta group firms (Vedanta Ltd, Vedanta Aluminium Metal, Vedanta Iron & Steel, Vedanta Power) posted their first Q1 production updates since the May 2026 demerger. First real read on standalone operational health of the split entities.
+  Source: https://upstox.com/news/market-news/stocks/vedanta-aluminium-vedanta-iron-and-steel-vedanta-group-firms-post-q1-updates-key-metrics-to-track/article-196409/
+
+BANKING
+- ICICI Bank Q1 FY27 profit rose 16% YoY to Rs 14,805 crore, with advances up 19.6% YoY and gross NPA improving to 1.38%. Broad-based, clean beat on growth and asset quality.
+  Source: https://www.business-standard.com/markets/capital-market-news/icici-bank-q1-pat-rises-16-yoy-to-rs-14-805-crore-126072000255_1.html
+
+CONGLOMERATE / ENERGY
+- Reliance Industries: Jio Platforms' IPO is gaining traction (DRHP filed for ~27 crore fresh shares) and green-energy/digital growth continues to support the stock. A potential Jio listing is a major re-rating catalyst for the group.
+  Source: https://www.latestly.com/business/reliance-industries-stock-update-jio-ipo-green-energy-drive-gains-7500681.html/amp
+
+TELECOM
+- Tata Communications received a Rs 7,800 crore show-cause-cum-demand notice from the Dept. of Telecom over AGR dues spanning FY06-FY24; the company plans to legally contest it. A material contingent-liability overhang, though litigation risk rather than an immediate cash outflow for now.
+  Source: https://www.business-standard.com/companies/news/dot-issues-7-800-cr-demand-notice-to-tata-communications-over-agr-dues-125072700489_1.html
+
+REAL ESTATE & HOSPITALITY
+- Prestige Estates bought a 50% stake in Advent Convention and Hotels International for Rs 504 crore, expanding its commercial/hospitality real estate footprint; the stock rose over 2% on the news.
+  Source: https://www.businesstoday.in/markets/stocks/story/advent-hotels-shares-zoom-17-after-rs-504-crore-stake-sale-in-subsidiary-to-prestige-estates-541138-2026-07-06
+
+ELECTRONICS MANUFACTURING
+- Dixon Technologies rose ~4% after announcing a foray into camera modules, broadening its contract-manufacturing product mix beyond mobiles. Brokerages are recalibrating target prices on the new vertical.
+  Source: https://www.business-standard.com/amp/markets/news/dixon-rises-4-on-camera-module-foray-brokerages-decode-stock-strategy-125071600193_1.html
+
+FERTILIZERS & CHEMICALS
+- Paradeep Phosphates was upgraded from Sell to Hold (Jul 22) as technicals and valuation improved, even though quarterly financials remain soft (net profit down ~14.5% QoQ). Ratings tailwind despite a still-weak profit trend.
+  Source: https://www.marketsmojo.com/news/stock-recommendation/paradeep-phosphates-ltd-upgraded-to-hold-as-technicals-improve-amid-mixed-financials-4117255
+
+MEDIA
+- Network18 swung to a Rs 38.36 crore consolidated net loss in Q1 FY27 (vs a Rs 148.85 crore profit a year ago) despite 10.3% revenue growth; shares fell 4.2% on the print. Margin/cost pressure is outweighing top-line growth.
+  Source: https://univest.in/blogs/network18-media-and-investments-share-price-q1-results-16-july-2026
+
+INTERNET
+- Eternal (Zomato) shares jumped up to 6% on heavy volume (Jul 27), part of a ~12% gain for the stock in July, alongside Swiggy, as platform stocks rallied. No single catalyst cited beyond broad sector buying/volume.
+  Source: https://www.business-standard.com/markets/news/eternal-swiggy-up-over-5-on-huge-volume-what-s-driving-platform-stocks-126072700414_1.html
+
+FINANCIAL SERVICES / NBFC
+- CreditAccess Grameen rose 3% after Motilal Oswal reiterated a Buy rating with a Rs 1,780 target (16% upside), citing its shift from pure microfinance to a diversified rural lending platform.
+  Source: https://www.business-standard.com/markets/news/creditaccess-grameen-gains-3-as-mofsl-reiterates-buy-sees-16-upside-126070200261_1.html
+
+---
+No material news this cycle for: Power generation names (NTPC, RECLTD, JSWENERGY, BHEL, PFC, TATAPOWER, JSWINFRA), Industrials & Capital Goods (POLYCAB, KEI, ABB), CDSL, the uncategorized basket (CPPLUS, INOXINDIA, GARFIBRES, KRN-BE, PTCIL, ROTO, ATLANTAELE, VOGL, VISL), JINDALSAW/JSWSTEEL/NATIONALUM/VEDPOWER (beyond the group update above), MAFANG, MOTILALOFS, INDHOTEL, KIMS, SONACOMS, BSOFT.
+
+This digest is auto-generated from web search results; verify before trading."

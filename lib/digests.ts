@@ -5,7 +5,7 @@ import { parse } from "csv-parse/sync";
 const DIGESTS_PATH = path.join(process.cwd(), "data", "digests.csv");
 
 export interface Digest {
-  date: string;
+  sentAt: string;
   subject: string;
   emailId: string;
   text: string;
@@ -24,10 +24,10 @@ export function getDigests(): Digest[] {
 
   return rows
     .map((row) => ({
-      date: row.date,
+      sentAt: row.sent_at,
       subject: row.subject,
       emailId: row.email_id,
       text: row.text,
     }))
-    .sort((a, b) => b.date.localeCompare(a.date));
+    .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
 }

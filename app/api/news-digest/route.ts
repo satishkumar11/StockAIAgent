@@ -7,7 +7,7 @@ const GITHUB_BRANCH = "main";
 const CSV_REPO_PATH = "data/digests.csv";
 
 interface DigestPayload {
-  date: string;
+  sentAt: string;
   subject: string;
   emailId: string;
   text: string;
@@ -17,7 +17,7 @@ function isValidPayload(body: unknown): body is DigestPayload {
   if (!body || typeof body !== "object") return false;
   const b = body as Record<string, unknown>;
   return (
-    typeof b.date === "string" &&
+    typeof b.sentAt === "string" &&
     typeof b.subject === "string" &&
     typeof b.emailId === "string" &&
     typeof b.text === "string"
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       method: "PUT",
       headers: { ...githubHeaders, "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: `Add digest for ${body.date}`,
+        message: `Add digest sent at ${body.sentAt}`,
         content: Buffer.from(updatedCsv, "utf-8").toString("base64"),
         sha: file.sha,
         branch: GITHUB_BRANCH,
