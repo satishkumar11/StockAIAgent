@@ -21,12 +21,32 @@ Resolved during setup:
   routine's prompt and no unrelated project's credentials are reused. The
   routine's `mcp_connections` includes the Resend connector; `allowed_tools`
   no longer needs `Bash` since there's no `curl` call to make.
-- **Holdings list**: the cloud environment does not have access to this
-  private repo (403 on `git_repository` source), so the segment list is
-  embedded as static text directly in the routine's prompt, not read from
-  `data/sectors.json`. Update the routine's prompt by hand (via the
-  `schedule` skill or the routines UI) after any re-ingest that changes the
-  holdings materially.
+- **Holdings list**: the segment list is embedded as static text directly
+  in the routine's prompt, not read from `data/sectors.json`. Update the
+  routine's prompt by hand (via the `schedule` skill or the routines UI)
+  after any re-ingest that changes the holdings materially.
+- **Website updates are manual — both automated paths are platform-blocked
+  for this session type**, confirmed by direct testing, not assumption:
+  - `curl` from the routine to our own Vercel API (`/api/news-digest`) gets
+    a `403` from the sandbox's own outbound egress policy proxy — arbitrary
+    HTTPS hosts aren't allowlisted (only `anthropic.com`, package registries,
+    and private network ranges are). Confirmed via the proxy's own status
+    endpoint and its `recentRelayFailures` log (`connect_rejected`).
+  - Adding `sources: [{git_repository: {...}}]` to give the routine a real
+    checkout of this repo (once it went public) does grant **read** access
+    — but `git push` still gets a `403 Forbidden` from a separate local git
+    proxy. Read-only, by design, apparently.
+  - A GitHub MCP connector (which would route around both, the same way
+    Gmail/Resend MCP calls already do) was connected via
+    claude.ai/customize/connectors but never appeared in the "Available MCP
+    Connectors" list this project's `schedule`-skill invocations surface —
+    unresolved as of 2026-07-30.
+  - Until one of these is actually resolved, the routine only emails +
+    drafts; the website is updated via `npm run sync-digest` afterward. Do
+    **not** re-add a curl-to-our-API or git-push step to the routine's
+    prompt without first confirming (via a live test run) that the
+    underlying platform restriction has actually changed — see "Displaying
+    digests on the website" below for the full incident history.
 
 ## What the routine should do, every weekday morning (~7:30 AM IST)
 
@@ -43,14 +63,17 @@ Resolved during setup:
    genuinely price-moving news. An empty digest (or one with just 2-3 items)
    is the expected common case, not a failure.
 4. **Compose the email:**
-   - Subject: `Portfolio Digest — <date> (<N updates>)`
+   - Date: computed explicitly in **IST** (`TZ=Asia/Kolkata date +%Y-%m-%d`),
+     not the sandbox's default UTC clock — otherwise a run close to midnight
+     IST can label the subject with the wrong calendar day.
+   - Subject: `Portfolio Digest — <IST date> (<N updates>)`
    - Body grouped by segment header, 1-3 bullets per item: headline, one-line
      takeaway, source link.
 5. **Send** via the Resend MCP connector's `send-email` tool (from
    `hello@imsatty.com` to `<recipient-email>`).
-6. **Ingest** into the website — a single `curl` with just the email ID (see
-   "Displaying digests on the website" below for why it's this minimal).
-7. **Also** create a Gmail draft with the same content as a backup/record.
+6. **Also** create a Gmail draft with the same content as a backup/record.
+
+Website ingestion is **not** a routine step — see below.
 
 ## Displaying digests on the website
 
@@ -60,62 +83,66 @@ source of truth is `data/digests.csv`, committed to the repo like other
 non-sensitive data files (it's news headlines/links, not financial figures,
 so unlike `data/portfolio.json` it isn't gitignored).
 
-Two ways `data/digests.csv` gets updated:
+**Current state: manual only.** `npm run sync-digest`
+(`scripts/sync-digest.ts`) fetches recently-sent emails from the **Resend
+REST API** (not the MCP connector — this runs as a plain local script) and
+appends any new `Portfolio Digest —` emails as rows. Requires a
+**full-access** `RESEND_API_KEY` in `.env.local` — a sending-only key can
+send but can't call `GET /emails` to list past sends. Run it, then
+commit/push — same rhythm as the `portfolio.json` workflow in
+[docs/reingest.md](reingest.md).
 
-1. **Manual**: `npm run sync-digest` (`scripts/sync-digest.ts`) fetches
-   recently-sent emails from the **Resend REST API** (not the MCP connector
-   — this runs as a plain local script) and appends any new
-   `Portfolio Digest —` emails as rows. Requires a **full-access**
-   `RESEND_API_KEY` in `.env.local` — a sending-only key can send but can't
-   call `GET /emails` to list past sends. Run it, then commit/push/redeploy
-   — same rhythm as the `portfolio.json` workflow in
-   [docs/reingest.md](reingest.md).
-2. **Automatic, via the routine itself**: `app/api/news-digest/route.ts` is
-   a POST endpoint that takes just `{ emailId }`, checks an
-   `x-digest-secret` header against `DIGEST_INGEST_SECRET`, then **fetches
-   the actual subject/text/timestamp from Resend's API itself** (using
-   `RESEND_API_KEY`, already a Vercel env var) and commits an updated
-   `data/digests.csv` straight to GitHub via the Contents API (using a
-   `GITHUB_TOKEN` fine-grained PAT scoped to just this repo, "Contents:
-   Read and write"). It's excluded from the cookie auth-gate in `proxy.ts`
-   (alongside `/login` and `/api/login`) since the routine calls it
-   directly, not as a logged-in browser session. Since Vercel auto-deploys
-   on push, this commit triggers a fresh build that picks up the new row —
-   no manual step needed, at the cost of a ~1-2 minute rebuild per digest.
-   The routine needs `Bash` in `allowed_tools` to `curl` this endpoint, and
-   `DIGEST_INGEST_SECRET` ends up embedded in plaintext in the routine's
-   prompt (`job_config` is returned as plaintext by the routines API) — a
-   real exposure consideration if the routine config is ever shared, though
-   scoped narrowly to "can add one digest row" rather than a
-   production-wide credential.
+### Automation attempts and why they're on hold
 
-   **Incident (2026-07-28), round 1**: the first live run sent its email
-   successfully but the ingest step failed silently — the routine's prompt
-   originally had it hand-write the JSON payload inline in a `curl -d '...'`
-   string, and real news text full of quotes/apostrophes is genuinely
-   error-prone to escape correctly by hand. Fixed by having the routine
-   write the subject/text to plain files verbatim (heredoc) and build the
-   JSON with a Python script (`json.dump`) instead of by hand.
+`app/api/news-digest/route.ts` still exists and works — it's a POST
+endpoint taking `{ emailId }`, checking an `x-digest-secret` header against
+`DIGEST_INGEST_SECRET`, then fetching the real subject/text/timestamp from
+Resend server-side and committing to GitHub via the Contents API (a
+`GITHUB_TOKEN` fine-grained PAT, "Contents: Read and write"). It's excluded
+from the cookie auth-gate in `proxy.ts`. You can call it manually
+(`curl -X POST .../api/news-digest -d '{"emailId": "..."}'`) as a third
+option alongside `sync-digest`, but **the routine itself cannot call it**:
 
-   **Incident (2026-07-28), round 2**: the *next* live run also failed to
-   ingest despite that fix — email sent fine again, but no GitHub commit
-   landed. Root cause unconfirmed (no access to the routine's execution
-   transcript to see the actual error — the routines UI returns a 403 here,
-   and there's no logs API), but the pattern was telling: manual `curl`
-   calls to the exact same endpoint succeeded every time, while the
-   *routine's* attempts failed 2/2 across two different scripting
-   approaches — pointing at something environment-specific (e.g. `python3`
-   not actually available in that sandbox) rather than a JSON-escaping bug
-   specifically. Rather than guess a third scripting variant, the payload
-   contract was changed to eliminate the fragile part entirely: the routine
-   now sends only the **`emailId`** (a short opaque string, trivially safe
-   to inline with zero quoting concerns), and the route fetches the real
-   content from Resend server-side. Both missed digests were recovered
-   manually (fetched from Resend's API, backfilled into `data/digests.csv`
-   directly).
+- **Round 1** (2026-07-28): routine hand-wrote the JSON payload inline in a
+  `curl -d '...'` string; real news text full of quotes/apostrophes is
+  error-prone to escape by hand, and the ingest failed silently.
+- **Round 2**: switched the routine to writing subject/text to plain files
+  (heredoc, zero escaping) and building JSON with Python's `json.dump`. The
+  *next* run still failed to ingest with no GitHub commit landing, despite
+  identical manual `curl` calls to the same endpoint succeeding every time.
+- **Round 3**: simplified the payload to just `{ emailId }` — trivially
+  safe to inline, no escaping possible. Still failed. At this point the
+  routine's own execution transcript (viewable at
+  claude.ai/code/routines/trig_018iiuaS4z5FxH4aPUrGxRCL, not accessible to
+  Claude directly — 403) revealed the real cause: **the sandbox's outbound
+  egress proxy rejects the request outright** (`403`,
+  `recentRelayFailures: [{kind: "connect_rejected"}]`) before it ever
+  reaches Vercel. Only `anthropic.com`, package registries (npm, PyPI,
+  crates.io, Go proxy), and private network ranges are allowlisted — not
+  arbitrary user-hosted services. This is a platform security boundary, not
+  something fixable by changing the payload.
+- **Round 4**: since curl to our API is blocked, tried giving the routine a
+  real git checkout instead — `sources: [{git_repository: {url: ...}}]}` in
+  `session_context` (works now that the repo is public; it 403'd on a
+  private repo before). The routine edited `data/digests.csv` directly with
+  its normal file tools and ran `git commit && git push`. Read access
+  worked; `git push` still failed with `403 Forbidden` from a *separate*
+  local git proxy — `sources: git_repository` grants read-only repo
+  context, not push credentials.
+- **Considered but not yet available**: a GitHub MCP connector, the same
+  mechanism that lets Gmail/Resend MCP calls succeed despite neither
+  `mcp.resend.com` nor `gmailmcp.googleapis.com` being on the egress
+  allowlist either (MCP tool calls are proxied by the outer Claude Code
+  harness, not raw network requests from inside the sandbox — so they
+  aren't subject to this same block). Connected via
+  claude.ai/customize/connectors, but never appeared in the "Available MCP
+  Connectors" list the `schedule` skill surfaces for routines, as of
+  2026-07-30. Worth re-checking periodically; if it starts showing up,
+  that's the way to make this fully automatic again.
 
-Required Vercel env vars for path 2: `DIGEST_INGEST_SECRET` and
-`GITHUB_TOKEN` (neither is needed for path 1 alone).
+Required Vercel env vars for the manual `/api/news-digest` path:
+`DIGEST_INGEST_SECRET` and `GITHUB_TOKEN` (neither is needed for
+`sync-digest` alone).
 
 ## Website UI
 
@@ -128,21 +155,15 @@ multiple digests can land on the same calendar day (manual runs, retries),
 rows are de-duplicated only by `email_id`, never collapsed by date — the
 date filter narrows to a day but still shows every entry within it.
 
-## Open question: how does the routine get the holdings list?
+## Resolved: how the routine gets the holdings list
 
-Unknown until we actually invoke the `schedule` skill: whether a scheduled
-cloud routine has access to this repo's files. Two options:
-
-- **If no repo access**: embed the symbol/company/segment list directly as
-  text in the routine's prompt (it's small — ~53 rows — and changes rarely;
-  update the prompt text by hand on re-ingest if the holdings list changes
-  materially).
-- **If repo access turns out to be available**: point it at `data/sectors.json`
-  plus the current `data/portfolio.json` symbol list instead — no financial
-  data needed for this purpose, only symbols/segments.
-
-Resolve this the first time the `schedule` skill is actually invoked; don't
-guess further ahead of time.
+Embedded as static text directly in the routine's prompt. Repo access via
+`sources: git_repository` does work now (confirmed in the round-4 test
+above, once the repo went public) but is read-only, and the routine's
+current prompt doesn't include it (removed along with the git-push attempt
+— no reason to carry the read-access source if nothing uses it). Update the
+list by hand (via the `schedule` skill or the routines UI) after any
+re-ingest that changes holdings materially.
 
 ## Current holdings, by segment (as of 2026-07-28 ingest)
 
